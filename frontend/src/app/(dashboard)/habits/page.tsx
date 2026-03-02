@@ -105,9 +105,15 @@ export default function HabitsPage() {
           <Button onClick={() => setHabitDialogOpen(false)}>Отмена</Button>
           <Button
             onClick={async () => {
-              await addHabit(newHabit)
-              setHabitDialogOpen(false)
-              setNewHabit({ name: '', color: '#4caf50', icon: '' })
+              try {
+                if (!user) throw new Error('User not authenticated')
+                await addHabit(user.id, newHabit)
+                await fetchHabits()
+                setHabitDialogOpen(false)
+                setNewHabit({ name: '', color: '#4caf50', icon: '' })
+              } catch (error) {
+                console.error('Error adding habit:', error)
+              }
             }}
             variant="contained"
           >

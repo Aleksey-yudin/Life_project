@@ -2,6 +2,7 @@
 
 import { Box, Typography, Chip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material'
 import { useHabitStore } from '@/modules/habits/store'
+import { useAuthStore } from '@/modules/auth/store'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { useState } from 'react'
@@ -21,7 +22,8 @@ const moodEmojis = {
 } as const
 
 export function MoodCalendar() {
-  const { moodLogs, addMoodLog, updateMoodLog } = useHabitStore()
+  const { moodLogs, addMoodLog, updateMoodLog, fetchMoodLogs } = useHabitStore()
+  const { user } = useAuthStore()
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [moodDialogOpen, setMoodDialogOpen] = useState(false)
   const [selectedMood, setSelectedMood] = useState<'great' | 'good' | 'stress' | 'bad'>('good')
@@ -49,14 +51,19 @@ export function MoodCalendar() {
     const dateStr = format(selectedDate, 'yyyy-MM-dd')
     const existingMood = getMoodForDay(selectedDate)
     
-    if (existingMood) {
-      await updateMoodLog(existingMood.id, { mood: selectedMood })
-    } else {
-      await addMoodLog({ date: dateStr, mood: selectedMood })
+    try {
+      if (existingMood) {
+        await updateMoodLog(existingMood.id, { mood: selectedMood })
+      } else {
+        if (!user) throw new Error('User not authenticated')
+        await addMoodLog(user.id, { date: dateStr, mood: selectedMood })
+      }
+      await fetchMoodLogs()
+      setMoodDialogOpen(false)
+      setSelectedDate(null)
+    } catch (error) {
+      console.error('Error saving mood:', error)
     }
-    
-    setMoodDialogOpen(false)
-    setSelectedDate(null)
   }
 
   return (

@@ -2,14 +2,13 @@
 
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
-import { useAuthStore } from '@/modules/auth/store'
 import type { Todo } from '@/types'
 
 interface TodoStore {
   todos: Todo[]
   loading: boolean
   fetchTodos: () => Promise<void>
-  addTodo: (data: { title: string; description?: string; due_date?: string; start_date?: string; priority: 'low' | 'medium' | 'high' | 'urgent'; status: 'pending' | 'in_progress' | 'completed' | 'archived'; parent_id?: string }) => Promise<void>
+  addTodo: (user_id: string, data: { title: string; description?: string; due_date?: string; start_date?: string; priority: 'low' | 'medium' | 'high' | 'urgent'; status: 'pending' | 'in_progress' | 'completed' | 'archived'; parent_id?: string }) => Promise<void>
   updateTodo: (id: string, data: Partial<Todo>) => Promise<void>
   deleteTodo: (id: string) => Promise<void>
   toggleTodoStatus: (id: string) => Promise<void>
@@ -28,10 +27,8 @@ export const useTodoStore = create<TodoStore>((set) => ({
     }
   },
 
-  addTodo: async (data) => {
-    const { user } = useAuthStore()
-    if (!user) throw new Error('User not authenticated')
-    const { error } = await supabase.from('todos').insert([{ ...data, user_id: user.id }])
+  addTodo: async (user_id, data) => {
+    const { error } = await supabase.from('todos').insert([{ ...data, user_id }])
     if (error) {
       console.error('Error adding todo:', error)
       throw error

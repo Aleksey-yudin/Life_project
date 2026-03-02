@@ -13,13 +13,13 @@ interface HabitsStore {
   fetchHabits: () => Promise<void>
   fetchEntries: () => Promise<void>
   fetchMoodLogs: () => Promise<void>
-  addHabit: (data: { name: string; color: string; icon: string }) => Promise<void>
+  addHabit: (user_id: string, data: { name: string; color: string; icon: string }) => Promise<void>
   updateHabit: (id: string, data: Partial<Habit>) => Promise<void>
   deleteHabit: (id: string) => Promise<void>
   addHabitEntry: (data: { habit_id: string; date: string; status: 'completed' | 'partial' | 'missed'; notes?: string }) => Promise<void>
   updateHabitEntry: (id: string, data: Partial<HabitEntry>) => Promise<void>
   deleteHabitEntry: (id: string) => Promise<void>
-  addMoodLog: (data: { date: string; mood: 'great' | 'good' | 'stress' | 'bad'; notes?: string }) => Promise<void>
+  addMoodLog: (user_id: string, data: { date: string; mood: 'great' | 'good' | 'stress' | 'bad'; notes?: string }) => Promise<void>
   updateMoodLog: (id: string, data: Partial<MoodLog>) => Promise<void>
   deleteMoodLog: (id: string) => Promise<void>
 }
@@ -57,10 +57,8 @@ export const useHabitStore = create<HabitsStore>((set) => ({
     }
   },
 
-  addHabit: async (data) => {
-    const { user } = useAuthStore()
-    if (!user) throw new Error('User not authenticated')
-    const { error } = await supabase.from('habits').insert([{ ...data, user_id: user.id }])
+  addHabit: async (user_id, data) => {
+    const { error } = await supabase.from('habits').insert([{ ...data, user_id }])
     if (error) {
       console.error('Error adding habit:', error)
       throw error
@@ -110,10 +108,8 @@ export const useHabitStore = create<HabitsStore>((set) => ({
     set(state => ({ entries: state.entries.filter(e => e.id !== id) }))
   },
 
-  addMoodLog: async (data) => {
-    const { user } = useAuthStore()
-    if (!user) throw new Error('User not authenticated')
-    const { error } = await supabase.from('mood_log').insert([{ ...data, user_id: user.id }])
+  addMoodLog: async (user_id, data) => {
+    const { error } = await supabase.from('mood_log').insert([{ ...data, user_id }])
     if (error) {
       console.error('Error adding mood log:', error)
       throw error

@@ -2,7 +2,6 @@
 
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
-import { useAuthStore } from '@/modules/auth/store'
 import type { Wallet, Category, Transaction } from '@/types'
 
 interface BudgetStore {
@@ -13,13 +12,13 @@ interface BudgetStore {
   fetchWallets: () => Promise<void>
   fetchCategories: () => Promise<void>
   fetchTransactions: () => Promise<void>
-  addWallet: (data: { name: string; initial_balance: number }) => Promise<void>
+  addWallet: (user_id: string, data: { name: string; initial_balance: number }) => Promise<void>
   updateWallet: (id: string, data: { name?: string; balance?: number }) => Promise<void>
   deleteWallet: (id: string) => Promise<void>
-  addCategory: (data: { name: string; type: 'income' | 'expense'; color: string; icon: string }) => Promise<void>
+  addCategory: (user_id: string, data: { name: string; type: 'income' | 'expense'; color: string; icon: string }) => Promise<void>
   updateCategory: (id: string, data: Partial<Category>) => Promise<void>
   deleteCategory: (id: string) => Promise<void>
-  addTransaction: (data: { wallet_id: string; category_id: string; amount: number; type: 'income' | 'expense'; date: string; description?: string }) => Promise<void>
+  addTransaction: (user_id: string, data: { wallet_id: string; category_id: string; amount: number; type: 'income' | 'expense'; date: string; description?: string }) => Promise<void>
   updateTransaction: (id: string, data: Partial<Transaction>) => Promise<void>
   deleteTransaction: (id: string) => Promise<void>
 }
@@ -58,10 +57,8 @@ export const useBudgetStore = create<BudgetStore>((set) => ({
     }
   },
 
-  addWallet: async (data) => {
-    const { user } = useAuthStore()
-    if (!user) throw new Error('User not authenticated')
-    const { error } = await supabase.from('wallets').insert([{ ...data, user_id: user.id }])
+  addWallet: async (user_id, data) => {
+    const { error } = await supabase.from('wallets').insert([{ ...data, user_id }])
     if (error) {
       console.error('Error adding wallet:', error)
       throw error
@@ -86,10 +83,8 @@ export const useBudgetStore = create<BudgetStore>((set) => ({
     set(state => ({ wallets: state.wallets.filter(w => w.id !== id) }))
   },
 
-  addCategory: async (data) => {
-    const { user } = useAuthStore()
-    if (!user) throw new Error('User not authenticated')
-    const { error } = await supabase.from('categories').insert([{ ...data, user_id: user.id }])
+  addCategory: async (user_id, data) => {
+    const { error } = await supabase.from('categories').insert([{ ...data, user_id }])
     if (error) {
       console.error('Error adding category:', error)
       throw error
@@ -113,10 +108,8 @@ export const useBudgetStore = create<BudgetStore>((set) => ({
     set(state => ({ categories: state.categories.filter(c => c.id !== id) }))
   },
 
-  addTransaction: async (data) => {
-    const { user } = useAuthStore()
-    if (!user) throw new Error('User not authenticated')
-    const { error } = await supabase.from('transactions').insert([{ ...data, user_id: user.id }])
+  addTransaction: async (user_id, data) => {
+    const { error } = await supabase.from('transactions').insert([{ ...data, user_id }])
     if (error) {
       console.error('Error adding transaction:', error)
       throw error

@@ -89,15 +89,21 @@ export default function TodoPage() {
   }
 
   const handleAddTodo = async () => {
-    await addTodo(newTodo)
-    setDialogOpen(false)
-    setNewTodo({
-      title: '',
-      description: '',
-      due_date: format(new Date(), 'yyyy-MM-dd'),
-      priority: 'medium',
-      status: 'pending',
-    })
+    try {
+      if (!user) throw new Error('User not authenticated')
+      await addTodo(user.id, newTodo)
+      await fetchTodos()
+      setDialogOpen(false)
+      setNewTodo({
+        title: '',
+        description: '',
+        due_date: format(new Date(), 'yyyy-MM-dd'),
+        priority: 'medium',
+        status: 'pending',
+      })
+    } catch (error) {
+      console.error('Error adding todo:', error)
+    }
   }
 
   const today = new Date()

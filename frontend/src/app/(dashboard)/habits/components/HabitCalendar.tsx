@@ -14,7 +14,7 @@ interface HabitCalendarProps {
 }
 
 export function HabitCalendar({ habitId }: HabitCalendarProps) {
-  const { entries, addHabitEntry, updateHabitEntry } = useHabitStore()
+  const { entries, addHabitEntry, updateHabitEntry, fetchEntries } = useHabitStore()
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; date: Date } | null>(null)
   
   const currentMonth = new Date()
@@ -38,13 +38,17 @@ export function HabitCalendar({ habitId }: HabitCalendarProps) {
     const dateStr = format(contextMenu.date, 'yyyy-MM-dd')
     const existingEntry = getEntryForDay(contextMenu.date)
     
-    if (existingEntry) {
-      await updateHabitEntry(existingEntry.id, { status })
-    } else {
-      await addHabitEntry({ habit_id: habitId, date: dateStr, status })
+    try {
+      if (existingEntry) {
+        await updateHabitEntry(existingEntry.id, { status })
+      } else {
+        await addHabitEntry({ habit_id: habitId, date: dateStr, status })
+      }
+      await fetchEntries()
+      setContextMenu(null)
+    } catch (error) {
+      console.error('Error updating habit entry:', error)
     }
-    
-    setContextMenu(null)
   }
 
   return (

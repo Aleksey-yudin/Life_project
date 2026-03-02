@@ -4,9 +4,11 @@ import { List, ListItem, ListItemText, IconButton, Dialog, DialogTitle, DialogCo
 import { Edit, Delete, Add } from '@mui/icons-material'
 import { useState } from 'react'
 import { useBudgetStore } from '@/modules/budget/store'
+import { useAuthStore } from '@/modules/auth/store'
 
 export function WalletList() {
-  const { wallets, addWallet, updateWallet, deleteWallet } = useBudgetStore()
+  const { wallets, addWallet, updateWallet, deleteWallet, fetchWallets } = useBudgetStore()
+  const { user } = useAuthStore()
   const [open, setOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState('')
@@ -29,17 +31,28 @@ export function WalletList() {
   }
 
   const handleSave = async () => {
-    if (editingId) {
-      await updateWallet(editingId, { name, balance })
-    } else {
-      await addWallet({ name, initial_balance: balance })
+    try {
+      if (editingId) {
+        await updateWallet(editingId, { name, balance })
+      } else {
+        if (!user) throw new Error('User not authenticated')
+        await addWallet(user.id, { name, initial_balance: balance })
+      }
+      await fetchWallets()
+      setOpen(false)
+    } catch (error) {
+      console.error('Error saving wallet:', error)
     }
-    setOpen(false)
   }
 
   const handleDelete = async (id: string) => {
     if (confirm('Удалить кошелёк?')) {
-      await deleteWallet(id)
+      try {
+        await deleteWallet(id)
+        await fetchWallets()
+      } catch (error) {
+        console.error('Error deleting wallet:', error)
+      }
     }
   }
 
@@ -65,8 +78,22 @@ export function WalletList() {
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>{editingId ? 'Редактировать кошелёк' : 'Добавить кошелёк'}</DialogTitle>
         <DialogContent>
-          <TextField autoFocus margin="dense" label="Название" fullWidth value={name} onChange={e => setName(e.target.value)} />
-          <TextField margin="dense" label="Баланс" type="number" fullWidth value={balance} onChange={e => setBalance(parseFloat(e.target.value) || 0)} />
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Название"
+            fullWidth
+            value={name}
+            onChange={e => setName(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label="Начальный баланс"
+            type="number"
+            fullWidth
+            value={balance}
+            onChange={e => setBalance(parseFloat(e.target.value) || 0)}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Отмена</Button>

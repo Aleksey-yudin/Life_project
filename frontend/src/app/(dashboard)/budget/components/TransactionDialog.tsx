@@ -24,7 +24,7 @@ interface TransactionDialogProps {
 
 export function TransactionDialog({ open, onClose }: TransactionDialogProps) {
   const { user } = useAuthStore()
-  const { wallets, categories, addTransaction } = useBudgetStore()
+  const { wallets, categories, addTransaction, fetchTransactions } = useBudgetStore()
   const [formData, setFormData] = useState({
     wallet_id: '',
     category_id: '',
@@ -39,16 +39,22 @@ export function TransactionDialog({ open, onClose }: TransactionDialogProps) {
       return
     }
 
-    await addTransaction(formData)
-    onClose()
-    setFormData({
-      wallet_id: '',
-      category_id: '',
-      amount: 0,
-      type: 'expense',
-      date: new Date().toISOString().split('T')[0],
-      description: '',
-    })
+    try {
+      if (!user) throw new Error('User not authenticated')
+      await addTransaction(user.id, formData)
+      await fetchTransactions()
+      onClose()
+      setFormData({
+        wallet_id: '',
+        category_id: '',
+        amount: 0,
+        type: 'expense',
+        date: new Date().toISOString().split('T')[0],
+        description: '',
+      })
+    } catch (error) {
+      console.error('Error adding transaction:', error)
+    }
   }
 
   return (
@@ -61,76 +67,64 @@ export function TransactionDialog({ open, onClose }: TransactionDialogProps) {
             <Select
               value={formData.wallet_id}
               label="Кошелёк"
-              onChange={(e) => setFormData({ ...formData, wallet_id: e.target.value })}
+              onChange={e => setFormData({ ...formData, wallet_id: e.target.value })}
             >
-              {wallets.map((wallet) => (
-                <MenuItem key={wallet.id} value={wallet.id}>
-                  {wallet.name}
-                </MenuItem>
+              {wallets.map(wallet => (
+                <MenuItem key={wallet.id} value={wallet.id}>{wallet.name}</MenuItem>
               ))}
             </Select>
           </FormControl>
-
           <FormControl fullWidth>
             <InputLabel>Категория</InputLabel>
             <Select
               value={formData.category_id}
               label="Категория"
-              onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+              onChange={e => setFormData({ ...formData, category_id: e.target.value })}
             >
-              {categories.map((category) => (
-                <MenuItem key={category.id} value={category.id}>
-                  {category.name} ({category.type === 'income' ? 'Доход' : 'Расход'})
-                </MenuItem>
+              {categories.filter(c => c.type === formData.type).map(category => (
+                <MenuItem key={category.id} value={category.id}>{category.name}</MenuItem>
               ))}
             </Select>
           </FormControl>
-
-          <FormControl fullWidth>
-            <InputLabel>Тип</InputLabel>
-            <Select
-              value={formData.type}
-              label="Тип"
-              onChange={(e) => setFormData({ ...formData, type: e.target.value as 'income' | 'expense' })}
-            >
-              <MenuItem value="income">Доход</MenuItem>
-              <MenuItem value="expense">Расход</MenuItem>
-            </Select>
-          </FormControl>
-
           <TextField
             label="Сумма"
             type="number"
             fullWidth
             value={formData.amount}
-            onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
-            InputProps={{ inputProps: { step: 0.01 } }}
+            onChange={e => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
           />
-
+          <FormControl fullWidth>
+            <InputLabel>Тип</InputLabel>
+            <Select
+              value={formData.type}
+              label="Тип"
+              onChange={e => setFormData({ ...formData, type: e.target.value as 'income' | 'expense' })}
+            >
+              <MenuItem value="income">Доход</MenuItem>
+              <MenuItem value="expense">Расход</MenuItem>
+            </Select>
+          </FormControl>
           <TextField
             label="Дата"
             type="date"
             fullWidth
             value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            onChange={e => setFormData({ ...formData, date: e.target.value })}
             InputLabelProps={{ shrink: true }}
           />
-
           <TextField
             label="Описание"
             fullWidth
+            value={formData.description}
+            onChange={e => setFormData({ ...formData, description: e.target.value })}
             multiline
             rows={2}
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           />
         </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Отмена</Button>
-        <Button onClick={handleSubmit} variant="contained" disabled={!formData.wallet_id || !formData.category_id || formData.amount <= 0}>
-          Добавить
-        </Button>
+        <Button onClick={handleSubmit} variant="contained">Сохранить</Button>
       </DialogActions>
     </Dialog>
   )
