@@ -178,3 +178,25 @@ create trigger update_todos_updated_at before update on todos
 -- =====================================================
 -- МИГРАЦИЯ ЗАВЕРШЕНА УСПЕШНО
 -- =====================================================
+-- 5. RPC ФУНКЦИИ
+-- =====================================================
+
+-- Функция для атомарного обновления баланса кошелька
+create or replace function update_wallet_balance(
+  wallet_id uuid,
+  amount decimal
+)
+returns void as $$
+begin
+  update wallets
+  set balance = balance + amount,
+      updated_at = timezone('utc'::text, now())
+  where id = wallet_id;
+end;
+$$ language plpgsql;
+
+-- Включение RLS для RPC функций (если нужно)
+alter function update_wallet_balance() owner to postgres;
+grant execute on function update_wallet_balance to authenticated;
+
+-- =====================================================

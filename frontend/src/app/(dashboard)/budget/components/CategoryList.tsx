@@ -55,11 +55,11 @@ export function CategoryList() {
   }
 
   const handleDelete = async (id: string) => {
-    if (confirm('Удалить категорию?')) {
+    if (confirm('Удалить категорию? Все связанные операции также будут удалены.')) {
       try {
         await deleteCategory(id)
         await fetchCategories()
-        setSuccess('Категория удалена')
+        setSuccess('Категория и все связанные операции удалены')
       } catch (error: any) {
         console.error('Error deleting category:', error)
         setError(error.message || 'Не удалось удалить категорию')

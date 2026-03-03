@@ -1,10 +1,60 @@
 'use client'
 
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, Box } from '@mui/material'
+import { useState } from 'react'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+  Box,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+  Alert,
+  Snackbar,
+} from '@mui/material'
+import { Delete as DeleteIcon } from '@mui/icons-material'
 import { useBudgetStore } from '@/modules/budget/store'
 
 export function TransactionList() {
-  const { transactions, wallets, categories } = useBudgetStore()
+  const { transactions, wallets, categories, deleteTransaction, fetchTransactions } = useBudgetStore()
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+
+  const handleDeleteClick = (id: string) => {
+    setTransactionToDelete(id)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!transactionToDelete) return
+
+    try {
+      await deleteTransaction(transactionToDelete)
+      await fetchTransactions()
+      setSuccess('Операция успешно удалена')
+      setDeleteDialogOpen(false)
+      setTransactionToDelete(null)
+    } catch (error: any) {
+      console.error('Error deleting transaction:', error)
+      setError(error.message || 'Не удалось удалить операцию')
+    }
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false)
+    setTransactionToDelete(null)
+  }
 
   return (
     <Box>
@@ -21,6 +71,7 @@ export function TransactionList() {
               <TableCell>Тип</TableCell>
               <TableCell align="right">Сумма</TableCell>
               <TableCell>Описание</TableCell>
+              <TableCell align="center">Действия</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -37,12 +88,22 @@ export function TransactionList() {
                     {tx.amount.toFixed(2)} ₽
                   </TableCell>
                   <TableCell>{tx.description || '-'}</TableCell>
+                  <TableCell align="center">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDeleteClick(tx.id)}
+                      color="error"
+                      title="Удалить операцию"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
                 </TableRow>
               )
             })}
             {transactions.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={7} align="center">
                   <Typography color="text.secondary">Нет операций</Typography>
                 </TableCell>
               </TableRow>
@@ -50,6 +111,47 @@ export function TransactionList() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+        <DialogTitle>Удалить операцию?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Вы уверены, что хотите удалить эту операцию? Деньги будут возвращены на кошелёк, с которого были списаны.
+            Это действие нельзя отменить.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Отмена</Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained" autoFocus>
+            Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Error Snackbar */}
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      </Snackbar>
+
+      {/* Success Snackbar */}
+      <Snackbar
+        open={!!success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success" onClose={() => setSuccess(null)}>
+          {success}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

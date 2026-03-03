@@ -52,14 +52,15 @@ export function WalletList() {
   }
 
   const handleDelete = async (id: string) => {
-    if (confirm('Удалить кошелёк?')) {
+    if (confirm('Удалить кошелёк? Все связанные операции также будут удалены.')) {
       try {
         await deleteWallet(id)
         await fetchWallets()
-        setSuccess('Кошелёк удалён')
+        setSuccess('Кошелёк и все связанные операции удалены')
       } catch (error: any) {
         console.error('Error deleting wallet:', error)
-        setError(error.message || 'Не удалось удалить кошелёк')
+        const errorMessage = error.message || 'Не удалось удалить кошелёк'
+        setError(errorMessage)
       }
     }
   }
