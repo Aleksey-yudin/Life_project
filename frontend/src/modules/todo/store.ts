@@ -11,7 +11,7 @@ interface TodoStore {
   addTodo: (user_id: string, data: { title: string; description?: string; due_date?: string; start_date?: string; priority: 'low' | 'medium' | 'high' | 'urgent'; status: 'pending' | 'in_progress' | 'completed' | 'archived'; parent_id?: string }) => Promise<void>
   updateTodo: (id: string, data: Partial<Todo>) => Promise<void>
   deleteTodo: (id: string) => Promise<void>
-  toggleTodoStatus: (id: string) => Promise<void>
+  toggleTodoStatus: (id: string) => Promise<'pending' | 'completed'>
 }
 
 export const useTodoStore = create<TodoStore>((set) => ({
@@ -52,9 +52,11 @@ export const useTodoStore = create<TodoStore>((set) => ({
     set(state => ({ todos: state.todos.filter(t => t.id !== id) }))
   },
 
-  toggleTodoStatus: async (id) => {
+  toggleTodoStatus: async (id): Promise<'pending' | 'completed'> => {
     const todo = useTodoStore.getState().todos.find(t => t.id === id)
-    if (!todo) return
+    if (!todo) {
+      throw new Error('Todo not found')
+    }
 
     const newStatus = todo.status === 'completed' ? 'pending' : 'completed'
     const { error } = await supabase.from('todos').update({ status: newStatus }).eq('id', id)
@@ -67,5 +69,6 @@ export const useTodoStore = create<TodoStore>((set) => ({
         t.id === id ? { ...t, status: newStatus } : t
       )
     }))
+    return newStatus
   },
 }))

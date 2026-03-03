@@ -1,6 +1,6 @@
 'use client'
 
-import { Box, Typography, IconButton, Menu, MenuItem } from '@mui/material'
+import { Box, Typography, IconButton, Menu, MenuItem, Alert, Snackbar } from '@mui/material'
 import { useHabitStore } from '@/modules/habits/store'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns'
 import { ru } from 'date-fns/locale'
@@ -16,7 +16,9 @@ interface HabitCalendarProps {
 export function HabitCalendar({ habitId }: HabitCalendarProps) {
   const { entries, addHabitEntry, updateHabitEntry, fetchEntries } = useHabitStore()
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; date: Date } | null>(null)
-  
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+   
   const currentMonth = new Date()
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(currentMonth)
@@ -41,77 +43,105 @@ export function HabitCalendar({ habitId }: HabitCalendarProps) {
     try {
       if (existingEntry) {
         await updateHabitEntry(existingEntry.id, { status })
+        setSuccess('Запись обновлена')
       } else {
         await addHabitEntry({ habit_id: habitId, date: dateStr, status })
+        setSuccess('Запись добавлена')
       }
       await fetchEntries()
       setContextMenu(null)
-    } catch (error) {
+      setError(null)
+    } catch (error: any) {
       console.error('Error updating habit entry:', error)
+      setError(error.message || 'Не удалось сохранить запись')
     }
   }
 
   return (
-    <Box>
-      <Typography variant="subtitle2" gutterBottom>
-        Календарь привычки (кликните правой кнопкой для отметки)
-      </Typography>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-        {days.map(day => {
-          const entry = getEntryForDay(day)
-          const isToday = isSameDay(day, new Date())
-          return (
-            <Box
-              key={day.toISOString()}
-              onContextMenu={(e) => handleRightClick(e, day)}
-              sx={{
-                width: 28,
-                height: 28,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 0.5,
-                fontSize: '0.75rem',
-                bgcolor: entry
-                  ? entry.status === 'completed'
-                    ? 'success.light'
-                    : entry.status === 'partial'
-                    ? 'warning.light'
-                    : 'error.light'
-                  : isToday
-                  ? 'action.hover'
-                  : 'background.paper',
-                '&:hover': { bgcolor: 'action.selected', cursor: 'pointer' },
-              }}
-              title={`${format(day, 'dd MMMM', { locale: ru })}: ${entry?.status || 'не отмечено'}`}
-            >
-              {format(day, 'd')}
-            </Box>
-          )
-        })}
+    <>
+      <Box>
+        <Typography variant="subtitle2" gutterBottom>
+          Календарь привычки (кликните правой кнопкой для отметки)
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+          {days.map(day => {
+            const entry = getEntryForDay(day)
+            const isToday = isSameDay(day, new Date())
+            return (
+              <Box
+                key={day.toISOString()}
+                onContextMenu={(e) => handleRightClick(e, day)}
+                sx={{
+                  width: 28,
+                  height: 28,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 0.5,
+                  fontSize: '0.75rem',
+                  bgcolor: entry
+                    ? entry.status === 'completed'
+                      ? 'success.light'
+                      : entry.status === 'partial'
+                      ? 'warning.light'
+                      : 'error.light'
+                    : isToday
+                    ? 'action.hover'
+                    : 'background.paper',
+                  '&:hover': { bgcolor: 'action.selected', cursor: 'pointer' },
+                }}
+                title={`${format(day, 'dd MMMM', { locale: ru })}: ${entry?.status || 'не отмечено'}`}
+              >
+                {format(day, 'd')}
+              </Box>
+            )
+          })}
+        </Box>
+        
+        <Menu
+          open={contextMenu !== null}
+          onClose={() => setContextMenu(null)}
+          anchorReference="anchorPosition"
+          anchorPosition={contextMenu ? { top: contextMenu.y, left: contextMenu.x } : undefined}
+        >
+          <MenuItem onClick={() => handleStatusChange('completed')}>
+            <CheckCircleIcon color="success" fontSize="small" sx={{ mr: 1 }} />
+            Выполнено
+          </MenuItem>
+          <MenuItem onClick={() => handleStatusChange('partial')}>
+            <IndeterminateCheckBoxIcon color="warning" fontSize="small" sx={{ mr: 1 }} />
+            Частично
+          </MenuItem>
+          <MenuItem onClick={() => handleStatusChange('missed')}>
+            <CancelIcon color="error" fontSize="small" sx={{ mr: 1 }} />
+            Пропущено
+          </MenuItem>
+        </Menu>
       </Box>
-      
-      <Menu
-        open={contextMenu !== null}
-        onClose={() => setContextMenu(null)}
-        anchorReference="anchorPosition"
-        anchorPosition={contextMenu ? { top: contextMenu.y, left: contextMenu.x } : undefined}
+
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <MenuItem onClick={() => handleStatusChange('completed')}>
-          <CheckCircleIcon color="success" fontSize="small" sx={{ mr: 1 }} />
-          Выполнено
-        </MenuItem>
-        <MenuItem onClick={() => handleStatusChange('partial')}>
-          <IndeterminateCheckBoxIcon color="warning" fontSize="small" sx={{ mr: 1 }} />
-          Частично
-        </MenuItem>
-        <MenuItem onClick={() => handleStatusChange('missed')}>
-          <CancelIcon color="error" fontSize="small" sx={{ mr: 1 }} />
-          Пропущено
-        </MenuItem>
-      </Menu>
-    </Box>
+        <Alert severity="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success" onClose={() => setSuccess(null)}>
+          {success}
+        </Alert>
+      </Snackbar>
+    </>
   )
 }

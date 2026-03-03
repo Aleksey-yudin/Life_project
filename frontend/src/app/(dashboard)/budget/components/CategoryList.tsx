@@ -1,6 +1,6 @@
 'use client'
 
-import { List, ListItem, ListItemText, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, FormControl, InputLabel, Select, MenuItem, Typography, Box } from '@mui/material'
+import { List, ListItem, ListItemText, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, FormControl, InputLabel, Select, MenuItem, Typography, Box, Alert, Snackbar } from '@mui/material'
 import { Edit, Delete, Add } from '@mui/icons-material'
 import { useState } from 'react'
 import { useBudgetStore } from '@/modules/budget/store'
@@ -14,6 +14,8 @@ export function CategoryList() {
   const [name, setName] = useState('')
   const [type, setType] = useState<'income' | 'expense'>('expense')
   const [color, setColor] = useState('#000000')
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   const handleOpen = (id?: string) => {
     if (id) {
@@ -37,14 +39,18 @@ export function CategoryList() {
     try {
       if (editingId) {
         await updateCategory(editingId, { name, type, color })
+        setSuccess('Категория успешно обновлена')
       } else {
         if (!user) throw new Error('User not authenticated')
         await addCategory(user.id, { name, type, color, icon: '' })
+        setSuccess('Категория успешно добавлена')
       }
       await fetchCategories()
       setOpen(false)
-    } catch (error) {
+      setError(null)
+    } catch (error: any) {
       console.error('Error saving category:', error)
+      setError(error.message || 'Не удалось сохранить категорию')
     }
   }
 
@@ -53,8 +59,10 @@ export function CategoryList() {
       try {
         await deleteCategory(id)
         await fetchCategories()
-      } catch (error) {
+        setSuccess('Категория удалена')
+      } catch (error: any) {
         console.error('Error deleting category:', error)
+        setError(error.message || 'Не удалось удалить категорию')
       }
     }
   }
@@ -73,9 +81,9 @@ export function CategoryList() {
               <IconButton edge="end" onClick={() => handleDelete(category.id)}><Delete /></IconButton>
             </>
           }>
-            <ListItemText 
-              primary={category.name} 
-              secondary={`${category.type === 'income' ? 'Доход' : 'Расход'} - ${category.color}`} 
+            <ListItemText
+              primary={category.name}
+              secondary={`${category.type === 'income' ? 'Доход' : 'Расход'} - ${category.color}`}
             />
           </ListItem>
         ))}
@@ -116,6 +124,28 @@ export function CategoryList() {
           <Button onClick={handleSave} variant="contained">Сохранить</Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success" onClose={() => setSuccess(null)}>
+          {success}
+        </Alert>
+      </Snackbar>
     </>
   )
 }

@@ -137,7 +137,19 @@ create policy "Users can manage own habits" on habits
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create policy "Users can manage own habit entries" on habit_entries
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all using (
+    exists (
+      select 1 from habits
+      where habits.id = habit_entries.habit_id
+      and habits.user_id = auth.uid()
+    )
+  ) with check (
+    exists (
+      select 1 from habits
+      where habits.id = habit_entries.habit_id
+      and habits.user_id = auth.uid()
+    )
+  );
 
 create policy "Users can manage own mood logs" on mood_log
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);

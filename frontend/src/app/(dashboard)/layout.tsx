@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@mui/material'
+import { Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItem, ListItemButton, ListItemIcon, ListItemText, CircularProgress } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet'
@@ -30,19 +30,37 @@ export default function DashboardLayout({
 }) {
   const router = useRouter()
   const pathname = usePathname()
-  const { user, logout } = useAuthStore()
+  const { user, loading, initialized, logout } = useAuthStore()
 
   useEffect(() => {
-    if (!user) {
+    // Only redirect if initialization is complete and no user
+    if (initialized && !user && !loading) {
       router.push('/login')
     }
-  }, [user, router])
+  }, [user, loading, initialized, router])
 
   const handleLogout = async () => {
     await logout()
     router.push('/login')
   }
 
+  // Show loading state while checking authentication (before initialization completes)
+  if (loading || !initialized) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  // If initialized, not loading, and no user, redirect (handled by useEffect)
   if (!user) {
     return null
   }

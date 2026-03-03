@@ -24,6 +24,8 @@ import {
   Chip,
   ToggleButton,
   ToggleButtonGroup,
+  Alert,
+  Snackbar,
 } from '@mui/material'
 import { Add, CheckCircle, RadioButtonUnchecked } from '@mui/icons-material'
 import { useTodoStore } from '@/modules/todo/store'
@@ -52,6 +54,8 @@ export default function TodoPage() {
     priority: 'medium',
     status: 'pending',
   })
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   useEffect(() => {
     if (user) {
@@ -90,9 +94,14 @@ export default function TodoPage() {
 
   const handleAddTodo = async () => {
     try {
+      if (!newTodo.title.trim()) {
+        setError('Введите название задачи')
+        return
+      }
       if (!user) throw new Error('User not authenticated')
       await addTodo(user.id, newTodo)
       await fetchTodos()
+      setSuccess('Задача добавлена')
       setDialogOpen(false)
       setNewTodo({
         title: '',
@@ -101,8 +110,10 @@ export default function TodoPage() {
         priority: 'medium',
         status: 'pending',
       })
-    } catch (error) {
+      setError(null)
+    } catch (error: any) {
       console.error('Error adding todo:', error)
+      setError(error.message || 'Не удалось добавить задачу')
     }
   }
 
@@ -170,22 +181,26 @@ export default function TodoPage() {
                     <ListItem key={todo.id} disablePadding>
                       <Checkbox
                         checked={todo.status === 'completed'}
-                        onChange={() => toggleTodoStatus(todo.id)}
+                        onChange={async () => {
+                          try {
+                            await toggleTodoStatus(todo.id)
+                            setSuccess('Статус задачи обновлён')
+                          } catch (error: any) {
+                            setError(error.message || 'Не удалось обновить статус')
+                          }
+                        }}
                         icon={<RadioButtonUnchecked />}
                         checkedIcon={<CheckCircle />}
                       />
-                      <ListItemText
-                        primary={todo.title}
-                        secondary={
-                          <Chip
-                            label={todo.priority}
-                            size="small"
-                            color={
-                              todo.priority === 'urgent' ? 'error' :
-                              todo.priority === 'high' ? 'warning' : 'default'
-                            }
-                          />
+                      <ListItemText primary={todo.title} />
+                      <Chip
+                        label={todo.priority}
+                        size="small"
+                        color={
+                          todo.priority === 'urgent' ? 'error' :
+                          todo.priority === 'high' ? 'warning' : 'default'
                         }
+                        sx={{ ml: 1 }}
                       />
                     </ListItem>
                   ))}
@@ -252,6 +267,28 @@ export default function TodoPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success" onClose={() => setSuccess(null)}>
+          {success}
+        </Alert>
+      </Snackbar>
     </Container>
   )
 }

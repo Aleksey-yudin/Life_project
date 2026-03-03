@@ -1,6 +1,6 @@
 'use client'
 
-import { List, ListItem, ListItemText, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Typography, Box } from '@mui/material'
+import { List, ListItem, ListItemText, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Typography, Box, Alert, Snackbar } from '@mui/material'
 import { Edit, Delete, Add } from '@mui/icons-material'
 import { useState } from 'react'
 import { useBudgetStore } from '@/modules/budget/store'
@@ -13,6 +13,8 @@ export function WalletList() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [balance, setBalance] = useState(0)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   const handleOpen = (id?: string) => {
     if (id) {
@@ -34,14 +36,18 @@ export function WalletList() {
     try {
       if (editingId) {
         await updateWallet(editingId, { name, balance })
+        setSuccess('Кошелёк успешно обновлён')
       } else {
         if (!user) throw new Error('User not authenticated')
         await addWallet(user.id, { name, initial_balance: balance })
+        setSuccess('Кошелёк успешно добавлен')
       }
       await fetchWallets()
       setOpen(false)
-    } catch (error) {
+      setError(null)
+    } catch (error: any) {
       console.error('Error saving wallet:', error)
+      setError(error.message || 'Не удалось сохранить кошелёк')
     }
   }
 
@@ -50,8 +56,10 @@ export function WalletList() {
       try {
         await deleteWallet(id)
         await fetchWallets()
-      } catch (error) {
+        setSuccess('Кошелёк удалён')
+      } catch (error: any) {
         console.error('Error deleting wallet:', error)
+        setError(error.message || 'Не удалось удалить кошелёк')
       }
     }
   }
@@ -100,6 +108,28 @@ export function WalletList() {
           <Button onClick={handleSave} variant="contained">Сохранить</Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success" onClose={() => setSuccess(null)}>
+          {success}
+        </Alert>
+      </Snackbar>
     </>
   )
 }

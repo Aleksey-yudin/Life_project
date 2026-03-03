@@ -1,44 +1,53 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = 'https://zwfklojxdghhbeaqcyww.supabase.co';
-const supabaseAnonKey = 'sb_publishable_j5pG83lhPvtFTPHTnhPBZA_v2InaKQn';
+const supabaseUrl = 'https://zwfklojxdghhbeaqcyww.supabase.co'
+const supabaseAnonKey = 'sb_publishable_j5pG83lhPvtFTPHTnhPBZA_v2InaKQn'
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 async function checkSchema() {
-  console.log('Checking database schema...\n');
+  console.log('=== Проверка схемы базы данных ===\n')
 
-  // Get list of tables
-  const { data: tables, error: tablesError } = await supabase
-    .rpc('pg_catalog.pg_tables');
+  // Проверка существования таблиц
+  console.log('1. Существование таблиц:')
+  console.log('   Проверьте вручную в Supabase Dashboard → Database → Tables')
+  const expectedTables = ['wallets', 'categories', 'transactions', 'habits', 'habit_entries', 'mood_log', 'todos']
+  expectedTables.forEach(table => {
+    console.log(`   - ${table}: должна существовать`)
+  })
 
-  if (tablesError) {
-    console.log('Cannot query pg_tables directly. Trying alternative method...');
-    // Try to query each table to see what exists
-    const testTables = ['wallets', 'categories', 'transactions', 'habits', 'habit_entries', 'mood_log', 'todos'];
+  // Проверка RLS
+  console.log('\n2. Статус RLS для таблиц:')
+  console.log('   Проверьте вручную в Supabase Dashboard → Database → Tables → [table] → Row Level Security')
+  expectedTables.forEach(table => {
+    console.log(`   - ${table}: должен иметь RLS enabled`)
+  })
 
-    for (const table of testTables) {
-      try {
-        const { data, error } = await supabase.from(table).select('*').limit(1);
-        if (error) {
-          console.log(`❌ Table '${table}': ${error.message}`);
-        } else {
-          console.log(`✅ Table '${table}': EXISTS`);
-        }
-      } catch (e) {
-        console.log(`❌ Table '${table}': EXCEPTION - ${e.message}`);
-      }
-    }
-    return;
-  }
+  // Проверка политик
+  console.log('\n3. Существующие политики RLS:')
+  console.log('   Проверьте вручную в Supabase Dashboard → Authentication → Policies')
+  const expectedPolicies = [
+    { table: 'wallets', name: 'Users can manage own wallets' },
+    { table: 'categories', name: 'Users can manage own categories' },
+    { table: 'transactions', name: 'Users can manage own transactions' },
+    { table: 'habits', name: 'Users can manage own habits' },
+    { table: 'habit_entries', name: 'Users can manage own habit entries' },
+    { table: 'mood_log', name: 'Users can manage own mood logs' },
+    { table: 'todos', name: 'Users can manage own todos' }
+  ]
+  expectedPolicies.forEach(p => {
+    console.log(`   - ${p.table}: "${p.name}"`)
+  })
 
-  console.log('Tables in database:', tables);
+  console.log('\n=== Диагностика через diagnose-db.js ===')
+  console.log('Запустите: node diagnose-db.js')
+  console.log('Этот скрипт попытается проверить подключение и наличие таблиц.')
+
+  console.log('\n=== Рекомендации ===')
+  console.log('1. Если таблицы не созданы - выполните миграцию из supabase-migrations/002_clean_schema.sql')
+  console.log('2. Если RLS выключен - выполните: ALTER TABLE <table> ENABLE ROW LEVEL SECURITY;')
+  console.log('3. Если нет политик - создайте их согласно миграции')
+  console.log('4. Проверьте, что пользователь авторизован перед операциями')
 }
 
-checkSchema().then(() => {
-  console.log('\nCheck complete');
-  process.exit(0);
-}).catch(err => {
-  console.error('Error:', err);
-  process.exit(1);
-});
+checkSchema().catch(console.error)

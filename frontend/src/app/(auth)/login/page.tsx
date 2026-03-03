@@ -10,12 +10,15 @@ import {
   Box,
   Alert,
   Paper,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material'
 import { useAuthStore } from '@/modules/auth/store'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(true) // default to true for better UX
   const [error, setError] = useState<string | null>(null)
 
   const router = useRouter()
@@ -25,7 +28,7 @@ export default function LoginPage() {
     e.preventDefault()
     setError(null)
 
-    const result = await login(email, password)
+    const result = await login(email, password, rememberMe)
     if (result.error) {
       setError(result.error)
     } else {
@@ -87,6 +90,17 @@ export default function LoginPage() {
             fullWidth
             margin="normal"
             autoComplete="current-password"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Запомнить пользователя"
+            sx={{ mt: 1 }}
           />
           <Button
             type="submit"

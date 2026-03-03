@@ -1,6 +1,6 @@
 'use client'
 
-import { Box, Typography, Chip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material'
+import { Box, Typography, Chip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, Alert, Snackbar } from '@mui/material'
 import { useHabitStore } from '@/modules/habits/store'
 import { useAuthStore } from '@/modules/auth/store'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns'
@@ -27,7 +27,9 @@ export function MoodCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [moodDialogOpen, setMoodDialogOpen] = useState(false)
   const [selectedMood, setSelectedMood] = useState<'great' | 'good' | 'stress' | 'bad'>('good')
-  
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+   
   const currentMonth = new Date()
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(currentMonth)
@@ -54,109 +56,137 @@ export function MoodCalendar() {
     try {
       if (existingMood) {
         await updateMoodLog(existingMood.id, { mood: selectedMood })
+        setSuccess('Настроение обновлено')
       } else {
         if (!user) throw new Error('User not authenticated')
         await addMoodLog(user.id, { date: dateStr, mood: selectedMood })
+        setSuccess('Настроение сохранено')
       }
       await fetchMoodLogs()
       setMoodDialogOpen(false)
       setSelectedDate(null)
-    } catch (error) {
+      setError(null)
+    } catch (error: any) {
       console.error('Error saving mood:', error)
+      setError(error.message || 'Не удалось сохранить настроение')
     }
   }
 
   return (
-    <Box>
-      <Typography variant="subtitle2" gutterBottom>
-        Календарь настроения (кликните по дню)
-      </Typography>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-        {days.map(day => {
-          const mood = getMoodForDay(day)
-          const isToday = isSameDay(day, new Date())
-          return (
-            <Box
-              key={day.toISOString()}
-              onClick={() => handleDayClick(day)}
-              sx={{
-                width: 28,
-                height: 28,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 0.5,
-                fontSize: '0.75rem',
-                bgcolor: mood
-                  ? mood.mood === 'great' ? 'success.light'
-                    : mood.mood === 'good' ? 'info.light'
-                    : mood.mood === 'stress' ? 'warning.light'
-                    : 'error.light'
-                  : isToday
-                  ? 'action.hover'
-                  : 'background.paper',
-                '&:hover': { bgcolor: 'action.selected', cursor: 'pointer' },
-              }}
-              title={`${format(day, 'dd MMMM', { locale: ru })}: ${mood?.mood || 'не отмечено'}`}
-            >
-              {mood ? (
-                <Chip
-                  label={moodEmojis[mood.mood]}
-                  size="small"
-                  sx={{ fontSize: '0.75rem', minWidth: 24, height: 24 }}
-                />
-              ) : (
-                format(day, 'd')
-              )}
+    <>
+      <Box>
+        <Typography variant="subtitle2" gutterBottom>
+          Календарь настроения (кликните по дню)
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+          {days.map(day => {
+            const mood = getMoodForDay(day)
+            const isToday = isSameDay(day, new Date())
+            return (
+              <Box
+                key={day.toISOString()}
+                onClick={() => handleDayClick(day)}
+                sx={{
+                  width: 28,
+                  height: 28,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 0.5,
+                  fontSize: '0.75rem',
+                  bgcolor: mood
+                    ? mood.mood === 'great' ? 'success.light'
+                      : mood.mood === 'good' ? 'info.light'
+                      : mood.mood === 'stress' ? 'warning.light'
+                      : 'error.light'
+                    : isToday
+                    ? 'action.hover'
+                    : 'background.paper',
+                  '&:hover': { bgcolor: 'action.selected', cursor: 'pointer' },
+                }}
+                title={`${format(day, 'dd MMMM', { locale: ru })}: ${mood?.mood || 'не отмечено'}`}
+              >
+                {mood ? (
+                  <Chip
+                    label={moodEmojis[mood.mood]}
+                    size="small"
+                    sx={{ fontSize: '0.75rem', minWidth: 24, height: 24 }}
+                  />
+                ) : (
+                  format(day, 'd')
+                )}
+              </Box>
+            )
+          })}
+        </Box>
+        <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          {Object.entries(moodColors).map(([mood, color]) => (
+            <Box key={mood} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Chip label={moodEmojis[mood as keyof typeof moodEmojis]} color={color as any} size="small" />
+              <Typography variant="body2">{mood}</Typography>
             </Box>
-          )
-        })}
-      </Box>
-      <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-        {Object.entries(moodColors).map(([mood, color]) => (
-          <Box key={mood} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Chip label={moodEmojis[mood as keyof typeof moodEmojis]} color={color as any} size="small" />
-            <Typography variant="body2">{mood}</Typography>
-          </Box>
-        ))}
+          ))}
+        </Box>
+
+        {/* Mood Dialog */}
+        <Dialog open={moodDialogOpen} onClose={() => setMoodDialogOpen(false)}>
+          <DialogTitle>Выберите настроение</DialogTitle>
+          <DialogContent>
+            <Box sx={{ display: 'flex', gap: 2, mt: 2, justifyContent: 'center' }}>
+              {(['great', 'good', 'stress', 'bad'] as const).map(mood => (
+                <IconButton
+                  key={mood}
+                  onClick={() => setSelectedMood(mood)}
+                  color={selectedMood === mood ? moodColors[mood] as any : 'default'}
+                  sx={{
+                    border: selectedMood === mood ? 2 : 0,
+                    borderColor: 'primary.main',
+                    width: 64,
+                    height: 64
+                  }}
+                >
+                  <Chip
+                    label={moodEmojis[mood]}
+                    size="medium"
+                    sx={{ fontSize: '1.5rem', minWidth: 40, height: 40 }}
+                  />
+                </IconButton>
+              ))}
+            </Box>
+            <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 2 }}>
+              {selectedDate && format(selectedDate, 'd MMMM yyyy', { locale: ru })}
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setMoodDialogOpen(false)}>Отмена</Button>
+            <Button onClick={handleSaveMood} variant="contained">Сохранить</Button>
+          </DialogActions>
+        </Dialog>
       </Box>
 
-      {/* Mood Dialog */}
-      <Dialog open={moodDialogOpen} onClose={() => setMoodDialogOpen(false)}>
-        <DialogTitle>Выберите настроение</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', gap: 2, mt: 2, justifyContent: 'center' }}>
-            {(['great', 'good', 'stress', 'bad'] as const).map(mood => (
-              <IconButton
-                key={mood}
-                onClick={() => setSelectedMood(mood)}
-                color={selectedMood === mood ? moodColors[mood] as any : 'default'}
-                sx={{
-                  border: selectedMood === mood ? 2 : 0,
-                  borderColor: 'primary.main',
-                  width: 64,
-                  height: 64
-                }}
-              >
-                <Chip
-                  label={moodEmojis[mood]}
-                  size="medium"
-                  sx={{ fontSize: '1.5rem', minWidth: 40, height: 40 }}
-                />
-              </IconButton>
-            ))}
-          </Box>
-          <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 2 }}>
-            {selectedDate && format(selectedDate, 'd MMMM yyyy', { locale: ru })}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setMoodDialogOpen(false)}>Отмена</Button>
-          <Button onClick={handleSaveMood} variant="contained">Сохранить</Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success" onClose={() => setSuccess(null)}>
+          {success}
+        </Alert>
+      </Snackbar>
+    </>
   )
 }
