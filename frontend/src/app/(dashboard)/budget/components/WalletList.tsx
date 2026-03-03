@@ -1,7 +1,7 @@
 'use client'
 
-import { List, ListItem, ListItemText, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Typography, Box, Alert, Snackbar } from '@mui/material'
-import { Edit, Delete, Add } from '@mui/icons-material'
+import { Card, CardContent, Typography, Box, Button, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, List, ListItem, ListItemText, ListItemAvatar, Chip, Avatar, Alert, Snackbar } from '@mui/material'
+import { Edit, Delete, Add, AccountBalanceWallet, TrendingUp } from '@mui/icons-material'
 import { useState } from 'react'
 import { useBudgetStore } from '@/modules/budget/store'
 import { useAuthStore } from '@/modules/auth/store'
@@ -67,33 +67,114 @@ export function WalletList() {
 
   return (
     <>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6">Кошельки</Typography>
-        <Button startIcon={<Add />} size="small" onClick={() => handleOpen()}>Добавить</Button>
-      </Box>
-      <List>
-        {wallets.map(wallet => (
-          <ListItem key={wallet.id} secondaryAction={
-            <>
-              <IconButton edge="end" onClick={() => handleOpen(wallet.id)}><Edit /></IconButton>
-              <IconButton edge="end" onClick={() => handleDelete(wallet.id)}><Delete /></IconButton>
-            </>
-          }>
-            <ListItemText primary={wallet.name} secondary={`Баланс: ${wallet.balance.toFixed(2)} ₽`} />
-          </ListItem>
-        ))}
-      </List>
+      <Card sx={{ height: '100%' }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Кошельки
+            </Typography>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Add />}
+              onClick={() => handleOpen()}
+              sx={{ borderRadius: 2 }}
+            >
+              Добавить
+            </Button>
+          </Box>
+          
+          <List dense>
+            {wallets.map(wallet => (
+              <ListItem
+                key={wallet.id}
+                sx={{
+                  borderRadius: 2,
+                  mb: 1,
+                  bgcolor: 'background.default',
+                  '&:hover': {
+                    bgcolor: 'action.hover',
+                  }
+                }}
+                secondaryAction={
+                  <Box>
+                    <IconButton
+                      edge="end"
+                      onClick={() => handleOpen(wallet.id)}
+                      size="small"
+                      sx={{ mr: 1 }}
+                    >
+                      <Edit fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      edge="end"
+                      onClick={() => handleDelete(wallet.id)}
+                      size="small"
+                      color="error"
+                    >
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </Box>
+                }
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{
+                    width: 40,
+                    height: 40,
+                    bgcolor: 'primary.light',
+                    mr: 2
+                  }}>
+                    <AccountBalanceWallet />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={wallet.name}
+                  primaryTypographyProps={{ fontWeight: 500 }}
+                  secondary={`${wallet.balance.toFixed(2)} ₽`}
+                  secondaryTypographyProps={{ color: 'text.secondary' }}
+                />
+              </ListItem>
+            ))}
+            {wallets.length === 0 && (
+              <Box
+                sx={{
+                  py: 4,
+                  textAlign: 'center',
+                  bgcolor: 'background.default',
+                  borderRadius: 2,
+                }}
+              >
+                <Typography color="text.secondary" gutterBottom>
+                  Нет кошельков
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Add />}
+                  onClick={() => handleOpen()}
+                >
+                  Добавить кошелёк
+                </Button>
+              </Box>
+            )}
+          </List>
+        </CardContent>
+      </Card>
 
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>{editingId ? 'Редактировать кошелёк' : 'Добавить кошелёк'}</DialogTitle>
+      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 600 }}>
+          {editingId ? 'Редактировать кошелёк' : 'Добавить кошелёк'}
+        </DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            label="Название"
+            label="Название кошелька"
             fullWidth
             value={name}
             onChange={e => setName(e.target.value)}
+            variant="outlined"
+            sx={{ mb: 2 }}
           />
           <TextField
             margin="dense"
@@ -102,11 +183,21 @@ export function WalletList() {
             fullWidth
             value={balance}
             onChange={e => setBalance(parseFloat(e.target.value) || 0)}
+            variant="outlined"
+            InputProps={{
+              startAdornment: <Box component="span" sx={{ mr: 1 }}>₽</Box>
+            }}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Отмена</Button>
-          <Button onClick={handleSave} variant="contained">Сохранить</Button>
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            disabled={!name.trim()}
+          >
+            Сохранить
+          </Button>
         </DialogActions>
       </Dialog>
 

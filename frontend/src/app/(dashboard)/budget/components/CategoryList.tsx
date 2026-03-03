@@ -1,7 +1,7 @@
 'use client'
 
-import { List, ListItem, ListItemText, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, FormControl, InputLabel, Select, MenuItem, Typography, Box, Alert, Snackbar } from '@mui/material'
-import { Edit, Delete, Add } from '@mui/icons-material'
+import { Card, CardContent, Typography, Box, Button, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, List, ListItem, ListItemText, ListItemAvatar, Avatar, Chip, Alert, Snackbar } from '@mui/material'
+import { Edit, Delete, Add, Category, ColorLens } from '@mui/icons-material'
 import { useState } from 'react'
 import { useBudgetStore } from '@/modules/budget/store'
 import { useAuthStore } from '@/modules/auth/store'
@@ -69,38 +69,130 @@ export function CategoryList() {
 
   return (
     <>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6">Категории</Typography>
-        <Button startIcon={<Add />} size="small" onClick={() => handleOpen()}>Добавить</Button>
-      </Box>
-      <List>
-        {categories.map(category => (
-          <ListItem key={category.id} secondaryAction={
-            <>
-              <IconButton edge="end" onClick={() => handleOpen(category.id)}><Edit /></IconButton>
-              <IconButton edge="end" onClick={() => handleDelete(category.id)}><Delete /></IconButton>
-            </>
-          }>
-            <ListItemText
-              primary={category.name}
-              secondary={`${category.type === 'income' ? 'Доход' : 'Расход'} - ${category.color}`}
-            />
-          </ListItem>
-        ))}
-      </List>
+      <Card sx={{ height: '100%' }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Категории
+            </Typography>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Add />}
+              onClick={() => handleOpen()}
+              sx={{ borderRadius: 2 }}
+            >
+              Добавить
+            </Button>
+          </Box>
+          
+          <List dense>
+            {categories.map(category => (
+              <ListItem
+                key={category.id}
+                sx={{
+                  borderRadius: 2,
+                  mb: 1,
+                  bgcolor: 'background.default',
+                  '&:hover': {
+                    bgcolor: 'action.hover',
+                  }
+                }}
+                secondaryAction={
+                  <Box>
+                    <IconButton
+                      edge="end"
+                      onClick={() => handleOpen(category.id)}
+                      size="small"
+                      sx={{ mr: 1 }}
+                    >
+                      <Edit fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      edge="end"
+                      onClick={() => handleDelete(category.id)}
+                      size="small"
+                      color="error"
+                    >
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </Box>
+                }
+              >
+                <ListItemAvatar>
+                  <Avatar
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      bgcolor: category.color || 'primary.main',
+                      mr: 2
+                    }}
+                  >
+                    <ColorLens />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={category.name}
+                  primaryTypographyProps={{ fontWeight: 500 }}
+                  secondary={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                      <Chip
+                        label={category.type === 'income' ? 'Доход' : 'Расход'}
+                        size="small"
+                        color={category.type === 'income' ? 'success' : 'error'}
+                        variant="outlined"
+                        sx={{ height: 20, fontSize: '0.7rem' }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        {category.color}
+                      </Typography>
+                    </Box>
+                  }
+                />
+              </ListItem>
+            ))}
+            {categories.length === 0 && (
+              <Box
+                sx={{
+                  py: 4,
+                  textAlign: 'center',
+                  bgcolor: 'background.default',
+                  borderRadius: 2,
+                }}
+              >
+                <Typography color="text.secondary" gutterBottom>
+                  Нет категорий
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Add />}
+                  onClick={() => handleOpen()}
+                >
+                  Добавить категорию
+                </Button>
+              </Box>
+            )}
+          </List>
+        </CardContent>
+      </Card>
 
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>{editingId ? 'Редактировать категорию' : 'Добавить категорию'}</DialogTitle>
+      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 600 }}>
+          {editingId ? 'Редактировать категорию' : 'Добавить категорию'}
+        </DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            label="Название"
+            label="Название категории"
             fullWidth
             value={name}
             onChange={e => setName(e.target.value)}
+            variant="outlined"
+            sx={{ mb: 2 }}
           />
-          <FormControl fullWidth margin="dense">
+          <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
             <InputLabel>Тип</InputLabel>
             <Select
               value={type}
@@ -117,11 +209,19 @@ export function CategoryList() {
             fullWidth
             value={color}
             onChange={e => setColor(e.target.value)}
+            variant="outlined"
+            helperText="Например: #3f51b5, #f50057, #4caf50"
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Отмена</Button>
-          <Button onClick={handleSave} variant="contained">Сохранить</Button>
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            disabled={!name.trim()}
+          >
+            Сохранить
+          </Button>
         </DialogActions>
       </Dialog>
 

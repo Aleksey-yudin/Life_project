@@ -5,46 +5,156 @@ import { Inter } from 'next/font/google'
 
 const inter = Inter({ subsets: ['latin'] })
 
+// Material Dashboard Pro inspired color palette
 let theme = createTheme({
   typography: {
     fontFamily: inter.style.fontFamily,
-    h1: { fontSize: '2.5rem' },
-    h2: { fontSize: '2rem' },
-    h3: { fontSize: '1.75rem' },
-    h4: { fontSize: '1.5rem' },
-    h5: { fontSize: '1.25rem' },
-    h6: { fontSize: '1rem' },
+    h1: { fontSize: '2.5rem', fontWeight: 600 },
+    h2: { fontSize: '2rem', fontWeight: 600 },
+    h3: { fontSize: '1.75rem', fontWeight: 600 },
+    h4: { fontSize: '1.5rem', fontWeight: 600 },
+    h5: { fontSize: '1.25rem', fontWeight: 500 },
+    h6: { fontSize: '1rem', fontWeight: 500 },
+    body1: { fontSize: '0.875rem' },
+    body2: { fontSize: '0.75rem' },
+  },
+  shape: {
+    borderRadius: 12,
   },
   palette: {
     primary: {
-      main: '#1976d2',
-      light: '#42a5f5',
-      dark: '#1565c0',
+      main: '#3f51b5',
+      light: '#757de8',
+      dark: '#2c387e',
+      contrastText: '#ffffff',
     },
     secondary: {
-      main: '#dc004e',
+      main: '#f50057',
       light: '#ff4081',
-      dark: '#9a0036',
+      dark: '#c51162',
+      contrastText: '#ffffff',
     },
     success: {
-      main: '#2e7d32',
-      light: '#4caf50',
-      dark: '#1b5e20',
+      main: '#4caf50',
+      light: '#80e27e',
+      dark: '#087f23',
     },
     warning: {
-      main: '#ed6c02',
-      light: '#ff9800',
-      dark: '#e65100',
+      main: '#ff9800',
+      light: '#ffb74d',
+      dark: '#f57c00',
     },
     error: {
-      main: '#d32f2f',
-      light: '#f44336',
-      dark: '#c62828',
+      main: '#f44336',
+      light: '#ff7961',
+      dark: '#ba000d',
     },
     info: {
-      main: '#0288d1',
-      light: '#03a9f4',
-      dark: '#01579b',
+      main: '#00bcd4',
+      light: '#62efff',
+      dark: '#008ba3',
+    },
+    background: {
+      default: '#f8f9fa',
+      paper: '#ffffff',
+    },
+    text: {
+      primary: '#333333',
+      secondary: '#666666',
+    },
+  },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          border: '1px solid rgba(0,0,0,0.05)',
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          textTransform: 'none',
+          fontWeight: 500,
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          },
+        },
+        contained: {
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          borderRadius: 0,
+        },
+      },
+    },
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          borderRight: 'none',
+          boxShadow: '4px 0 20px rgba(0,0,0,0.05)',
+        },
+      },
+    },
+    MuiListItemButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          margin: '0 8px',
+          '&.Mui-selected': {
+            backgroundColor: 'rgba(63, 81, 181, 0.12)',
+            '&:hover': {
+              backgroundColor: 'rgba(63, 81, 181, 0.18)',
+            },
+          },
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 8,
+            '& .MuiInputLabel-root': {
+              color: '#333333',
+              '&.Mui-focused': {
+                color: '#333333',
+              },
+            },
+          },
+        },
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          borderRadius: 12,
+        },
+      },
     },
   },
 })
