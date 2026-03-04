@@ -193,7 +193,7 @@ export default function TodoPage() {
         </CardContent>
       </Card>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={2}>
         {days.map(day => {
           const dayTodos = getTodosForDate(day)
           const isToday = isSameDay(day, today)

@@ -55,8 +55,8 @@ let theme = createTheme({
       dark: '#008ba3',
     },
     background: {
-      default: '#f8f9fa',
-      paper: '#ffffff',
+      default: '#f5f5f5',
+      paper: '#fafafa',
     },
     text: {
       primary: '#333333',
@@ -70,6 +70,7 @@ let theme = createTheme({
           borderRadius: 12,
           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
           border: '1px solid rgba(0,0,0,0.05)',
+          backgroundColor: 'background.paper',
         },
       },
     },

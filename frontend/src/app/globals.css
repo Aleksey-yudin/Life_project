@@ -70,10 +70,13 @@ body {
   }
 }
 
-/* Better spacing for grid items */
-.MuiGrid-item {
-  display: flex;
-  flex-direction: column;
+/* Card backgrounds */
+.MuiCard-root {
+  background-color: #fafafa;
+}
+
+.MuiCardContent-root {
+  background-color: #fafafa;
 }
 
 /* Typography improvements */
@@ -94,11 +97,6 @@ body {
   &:hover {
     box-shadow: 0 6px 16px rgba(0,0,0,0.15);
   }
-}
-
-/* Paper/Container background */
-.MuiPaper-root, .MuiContainer-root {
-  background-color: #ffffff;
 }
 
 /* List item hover */

@@ -17,9 +17,6 @@ import {
   ListItemIcon,
   ListItemText,
   CircularProgress,
-  Avatar,
-  Badge,
-  Tooltip
 } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import DashboardIcon from '@mui/icons-material/Dashboard'
@@ -28,7 +25,6 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck'
 import SettingsIcon from '@mui/icons-material/Settings'
 import LogoutIcon from '@mui/icons-material/Logout'
-import NotificationsIcon from '@mui/icons-material/Notifications'
 import { useAuthStore } from '@/modules/auth/store'
 
 const drawerWidth = 260
@@ -69,7 +65,7 @@ export default function DashboardLayout({
           justifyContent: 'center',
           alignItems: 'center',
           minHeight: '100vh',
-          bgcolor: 'background.default',
+          bgcolor: '#f5f5f5',
         }}
       >
         <CircularProgress />
@@ -82,59 +78,26 @@ export default function DashboardLayout({
   }
 
   return (
-    <Box sx={{ display: 'flex', bgcolor: 'background.default', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', bgcolor: '#f5f5f5', minHeight: '100vh' }}>
       <AppBar
         position="fixed"
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          bgcolor: 'background.paper',
-          color: 'text.primary',
-          boxShadow: 1,
+          bgcolor: '#f5f5f5',
+          color: '#000000',
+          boxShadow: 'none',
         }}
       >
-        <Toolbar sx={{ justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              sx={{ display: { sm: 'none' } }}
-            >
-              <MenuIcon />
-            </IconButton>
-            <Typography
-              variant="h6"
-              noWrap
-              component="div"
-              sx={{
-                fontWeight: 700,
-                color: 'primary.main',
-                fontSize: '1.5rem'
-              }}
-            >
-              Integro
-            </Typography>
-          </Box>
-          
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Tooltip title="Уведомления">
-              <IconButton color="inherit" size="large">
-                <Badge badgeContent={4} color="error">
-                  <NotificationsIcon />
-                </Badge>
-              </IconButton>
-            </Tooltip>
-            <Avatar
-              sx={{
-                width: 40,
-                height: 40,
-                bgcolor: 'primary.main',
-                cursor: 'pointer'
-              }}
-            >
-              {user?.email?.[0]?.toUpperCase() || 'U'}
-            </Avatar>
-          </Box>
+        <Toolbar sx={{ justifyContent: 'flex-start' }}>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              fontSize: '2rem',
+            }}
+          >
+            Integro
+          </Typography>
         </Toolbar>
       </AppBar>
 
@@ -147,33 +110,17 @@ export default function DashboardLayout({
           '& .MuiDrawer-paper': {
             width: drawerWidth,
             boxSizing: 'border-box',
-            bgcolor: 'background.paper',
+            bgcolor: '#fafafa',
             borderRight: '1px solid',
             borderRightColor: 'divider',
+            mt: 8,
+            ml: 2,
+            mb: 2,
+            borderRadius: 2,
           },
         }}
       >
-        <Toolbar sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          py: 2
-        }}>
-          <Typography
-            variant="h5"
-            sx={{
-              fontWeight: 700,
-              color: 'primary.main',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1
-            }}
-          >
-            Integro
-          </Typography>
-        </Toolbar>
-        <Divider />
-        <List sx={{ px: 1, py: 2 }}>
+        <List sx={{ px: 2, py: 1 }}>
           {menuItems.map((item) => {
             const isActive = pathname === item.href
             return (
@@ -252,6 +199,9 @@ export default function DashboardLayout({
                   '& .MuiListItemIcon-root': {
                     color: 'inherit',
                   },
+                  '& .MuiTypography-root': {
+                    color: 'inherit',
+                  },
                 },
               }}
             >
@@ -274,7 +224,8 @@ export default function DashboardLayout({
           p: { xs: 2, sm: 3 },
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           minHeight: '100vh',
-          bgcolor: 'background.default',
+          bgcolor: '#f5f5f5',
+          mt: 8,
         }}
       >
         <Toolbar />
