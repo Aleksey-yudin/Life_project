@@ -20,11 +20,12 @@ import {
   Chip,
   Avatar,
 } from '@mui/material'
-import { Add, Delete, CheckCircle, TrendingUp, CalendarToday } from '@mui/icons-material'
+import { Add, Delete, CheckCircle, TrendingUp, CalendarToday, Palette } from '@mui/icons-material'
 import { useHabitStore } from '@/modules/habits/store'
 import { useAuthStore } from '@/modules/auth/store'
 import { HabitCalendar } from './components/HabitCalendar'
 import { MoodCalendar } from './components/MoodCalendar'
+import { ColorPickerDialog } from '@/components/ColorPickerDialog'
 
 export default function HabitsPage() {
   const { user } = useAuthStore()
@@ -34,6 +35,7 @@ export default function HabitsPage() {
   const [newHabit, setNewHabit] = useState({ name: '', color: '#3f51b5', icon: '' })
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [habitToDelete, setHabitToDelete] = useState<string | null>(null)
+  const [colorPickerOpen, setColorPickerOpen] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -309,16 +311,43 @@ export default function HabitsPage() {
             variant="outlined"
             sx={{ mb: 2 }}
           />
-          <TextField
-            margin="dense"
-            label="Цвет (hex)"
-            fullWidth
-            value={newHabit.color}
-            onChange={e => setNewHabit({ ...newHabit, color: e.target.value })}
-            variant="outlined"
-            helperText="Например: #3f51b5, #f50057, #4caf50"
-            sx={{ mb: 2 }}
-          />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
+            <Typography variant="body2" sx={{ minWidth: 120 }}>
+              Цвет привычки:
+            </Typography>
+            <Box
+              onClick={() => setColorPickerOpen(true)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                p: 1,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                cursor: 'pointer',
+                bgcolor: 'background.default',
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 1,
+                  bgcolor: newHabit.color,
+                  border: '2px solid',
+                  borderColor: 'divider',
+                }}
+              />
+              <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                {newHabit.color.toUpperCase()}
+              </Typography>
+              <Palette sx={{ ml: 1, color: 'action.active' }} />
+            </Box>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setHabitDialogOpen(false)}>Отмена</Button>
@@ -341,6 +370,13 @@ export default function HabitsPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ColorPickerDialog
+        open={colorPickerOpen}
+        onClose={() => setColorPickerOpen(false)}
+        onColorSelect={(color) => setNewHabit({ ...newHabit, color })}
+        initialColor={newHabit.color}
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="sm" fullWidth>

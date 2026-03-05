@@ -1,10 +1,11 @@
 'use client'
 
 import { Card, CardContent, Typography, Box, Button, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl, InputLabel, Select, MenuItem, List, ListItem, ListItemText, ListItemAvatar, Avatar, Chip, Alert, Snackbar } from '@mui/material'
-import { Edit, Delete, Add, Category, ColorLens } from '@mui/icons-material'
+import { Edit, Delete, Add, Category, ColorLens, Palette } from '@mui/icons-material'
 import { useState } from 'react'
 import { useBudgetStore } from '@/modules/budget/store'
 import { useAuthStore } from '@/modules/auth/store'
+import { ColorPickerDialog } from '@/components/ColorPickerDialog'
 
 export function CategoryList() {
   const { categories, addCategory, updateCategory, deleteCategory, fetchCategories } = useBudgetStore()
@@ -14,6 +15,7 @@ export function CategoryList() {
   const [name, setName] = useState('')
   const [type, setType] = useState<'income' | 'expense'>('expense')
   const [color, setColor] = useState('#000000')
+  const [colorPickerOpen, setColorPickerOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
@@ -203,15 +205,43 @@ export function CategoryList() {
               <MenuItem value="expense">Расход</MenuItem>
             </Select>
           </FormControl>
-          <TextField
-            margin="dense"
-            label="Цвет (hex)"
-            fullWidth
-            value={color}
-            onChange={e => setColor(e.target.value)}
-            variant="outlined"
-            helperText="Например: #3f51b5, #f50057, #4caf50"
-          />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
+            <Typography variant="body2" sx={{ minWidth: 100 }}>
+              Цвет категории:
+            </Typography>
+            <Box
+              onClick={() => setColorPickerOpen(true)}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                p: 1,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                cursor: 'pointer',
+                bgcolor: 'background.default',
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 1,
+                  bgcolor: color,
+                  border: '2px solid',
+                  borderColor: 'divider',
+                }}
+              />
+              <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                {color.toUpperCase()}
+              </Typography>
+              <Palette sx={{ ml: 1, color: 'action.active' }} />
+            </Box>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Отмена</Button>
@@ -224,6 +254,13 @@ export function CategoryList() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ColorPickerDialog
+        open={colorPickerOpen}
+        onClose={() => setColorPickerOpen(false)}
+        onColorSelect={setColor}
+        initialColor={color}
+      />
 
       <Snackbar
         open={!!error}

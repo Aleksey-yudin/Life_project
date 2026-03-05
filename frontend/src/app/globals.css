@@ -107,3 +107,8 @@ body {
     background-color: rgba(0,0,0,0.04);
   }
 }
+
+/* List padding override */
+.MuiList-root.MuiList-padding.css-3z769n-MuiList-root {
+  padding-top: 22px;
+}

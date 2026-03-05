@@ -228,7 +228,6 @@ export default function DashboardLayout({
           mt: 8,
         }}
       >
-        <Toolbar />
         {children}
       </Box>
     </Box>
